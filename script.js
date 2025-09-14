@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('progress');
     const progressNumber = document.getElementById('numbers');
 
+   
+    let editingTask = null; // edit button
+
     const toggleEmptyState = () => {
         emptyImage.style.display = taskList.children.length === 0 ? 'block' : 'none';
         todosContainer.style.width = taskList.children.length > 0 ? '100%' : '50%';
@@ -34,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = Array.from(taskList.querySelectorAll('li')).map(li =>({
             text: li.querySelector('span').textContent,
             completed: li.querySelector('.checkbox').checked
-        }))
+        }));
         localStorage.setItem('tasks', JSON.stringify(tasks));
     };
 
@@ -84,11 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         editBtn.addEventListener('click', () => {
             if (!checkbox.checked) {
+                //edit
                 taskInput.value = li.querySelector('span').textContent;
-                li.remove();
-                toggleEmptyState();
-                updateProgress();
-                saveTaskToLocalStorage();
+                editingTask = li;
             }
         });
 
@@ -98,8 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProgress();
             saveTaskToLocalStorage();
         });
-
+        
+       
         taskList.appendChild(li);
+        
+        
         taskInput.value = '';
         toggleEmptyState();
         updateProgress();
@@ -108,12 +112,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addTaskBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        addTask();
+        const taskText = taskInput.value.trim();
+
+        if (taskText === '') {
+            return;
+        }
+
+       
+        if (editingTask) {
+            // Updating the existing task's text
+            editingTask.querySelector('span').textContent = taskText;
+            editingTask.classList.remove('completed');
+            editingTask.querySelector('.checkbox').checked = false;
+            
+            
+            editingTask = null;
+        } else {
+
+            addTask(taskText);
+        }
+        
+        
+        taskInput.value = '';
+        updateProgress();
+        saveTaskToLocalStorage();
     });
+    
     taskInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            addTask();
+            const taskText = taskInput.value.trim();
+
+            if (taskText === '') {
+                return;
+            }
+
+            if (editingTask) {
+                editingTask.querySelector('span').textContent = taskText;
+                editingTask.classList.remove('completed');
+                editingTask.querySelector('.checkbox').checked = false;
+                editingTask = null;
+            } else {
+                addTask(taskText);
+            }
+
+            taskInput.value = '';
+            updateProgress();
+            saveTaskToLocalStorage();
         }
     });
 
@@ -121,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const Confetti = () => {
+    
     const defaults = {
         origin: { y: 0.7 },
     };
